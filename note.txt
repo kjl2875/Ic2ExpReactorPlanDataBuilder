@@ -1,0 +1,6 @@
+
+Ic2ExpReactorPlanner
+https://github.com/MauveCloud/Ic2ExpReactorPlanner/releases
+
+IC2 WIKI Nuclear Reactor
+https://wiki.industrial-craft.net/index.php?title=Nuclear_Reactor
