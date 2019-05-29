@@ -1,5 +1,15 @@
+<style>
+	#canvas
+	{
+		border: 1px solid gray;
+	}
+</style>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 <script>
 /**
+ * Run well in pc chrome browser
+ *
  *	Reactor Cell Data Description
  *	0: Empty
  *	1: Uranium Cell
@@ -8,17 +18,75 @@
  *
  */
  
+ /*
+var width = 9;
+var height = 6;
 var reactor = [
-	[0,0,1,0,0,0,0,0,0],
-	[0,1,2,1,0,0,0,0,0],
-	[1,2,3,2,1,0,0,0,0],
-	[0,1,2,1,0,0,0,0,0],
-	[0,0,1,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0,0,0]
+	0,0,1,0,0,0,0,0,0,
+	0,1,2,1,0,0,0,0,0,
+	1,2,3,2,1,0,0,0,0,
+	0,1,2,1,0,0,0,0,0,
+	0,0,1,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0
 ];
+*/
 
-var pos = {x:2,y:2};
+var width = 3;
+var height = 4;
+var reactor = [
+	0,0,0,
+	0,0,0,
+	0,0,0,
+	0,0,0,
+];
+//var pos = {x:2,y:2};
+//var pos_max = {x:width-1,y:height-1};
 
-console.log(reactor);
-console.log(reactor[pos.x][pos.y]);
+//console.log(reactor);
+//console.log(reactor[pos.y*width+pos.x]);
+
+$(document).ready(function() {
+
+/*
+	for( var y=0; y<height; y++ ) {
+		for( var x=0; x<width; x++ ) {
+			console.log(y*width+x);
+		}
+	}
+*/
+
+	console.log(reactor.join(','));
+	
+	//for( var i=0; i<16777216; i++ ) // celldata.length^(width*height)-1=4^(3*4)-1=16,777,215
+	for( var i=0; ; i++ )
+	{
+		reactor = getNextReactor(reactor);
+		//console.log(reactor.join(','));
+		if( null == reactor ) { break; }
+		
+		if( i%10000 == 0 ) { console.log(i); }
+	}
+	
+	console.log(i);
+	console.log('DONE');
+});
+
+
+function getNextReactor(reactor)
+{
+	var new_reactor = [];
+	
+	for( var t=0; t<reactor.length; t++ ) {
+		new_reactor[t] = reactor[t];
+	}
+	
+	for( var t=0; ; t++ ) {
+		if( new_reactor[t] < 3 ) { ++new_reactor[t]; break; }
+		else if( t == new_reactor.length ) { return null; } // overflow
+		else { new_reactor[t] = 0; }
+	}
+	
+	return new_reactor;
+}
+
 </script>
