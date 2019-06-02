@@ -1,232 +1,218 @@
-// https://www.onlinegdb.com/online_c_compiler
-
 #include <stdio.h>
-#include <time.h>
+#include <stdlib.h>
 
-#define FIELD_WIDTH (3)
-#define FIELD_HEIGHT (4)
+#define REACTOR_WIDTH (9)
+#define REACTOR_HEIGHT (6)
 
 #define CELL_EMPTY (0)
 #define CELL_URANIUM_SINGLE (1)
 #define CELL_URANIUM_DOUBLE (2)
 #define CELL_URANIUM_QUAD (3)
-#define MASK_CELL_URANIUM (3)
 
-void initField(int *FIELD, int width, int height);
-void printField(int *FIELD, int width, int height);
-//void setFieldEU(enum CellType *FIELD, enum CellType *FIELD_EU);
-int getEU(int *field, int width, int height);
+void initReactor(int *reactor);
+void printVector(int* reactor, int width, int height);
+void setCell(int * reactor, int x, int y, int cell);
+int calcReactor(const int* reactor);
 
-int main()
+int main(int argc, char** argv)
 {
-    //clock_t t0,t1;
-    int *field;
-    int EU;
-    //enum CellType *FIELD_EU;
-    
-    field = malloc(sizeof(int)*(FIELD_WIDTH+2)*(FIELD_HEIGHT+2)); // with border
-    //FIELD_EU = malloc(sizeof(int) * (FIELD_WIDTH) * (FIELD_HEIGHT)); // border is not used
-    initField(field,FIELD_WIDTH+2,FIELD_HEIGHT+2);
-    field[1*(FIELD_WIDTH+2)+2]=CELL_URANIUM_DOUBLE;
-    field[3*(FIELD_WIDTH+2)+3]=CELL_URANIUM_DOUBLE;
-    field[4*(FIELD_WIDTH+2)+1]=CELL_URANIUM_DOUBLE;
-    field[3*(FIELD_WIDTH+2)+1]=CELL_URANIUM_SINGLE;
-    field[3*(FIELD_WIDTH+2)+2]=CELL_URANIUM_SINGLE;
-    field[4*(FIELD_WIDTH+2)+2]=CELL_URANIUM_SINGLE;
-    field[2*(FIELD_WIDTH+2)+1]=CELL_URANIUM_QUAD;
-    field[2*(FIELD_WIDTH+2)+2]=CELL_URANIUM_QUAD;
-    
-    printField(field,FIELD_WIDTH+2,FIELD_HEIGHT+2);
-    
-    EU = getEU(field,FIELD_WIDTH+2,FIELD_HEIGHT+2);
-    
-    //printf("Runtime: %.06lf",(double)(t1-t0)/CLOCKS_PER_SEC);
-    free(field);
-    //free(FIELD_EU);
-    
-    printf("TotalEU: %d\n",EU);
-    return 0;
+	int code;
+	int *reactor = malloc(sizeof(int) * REACTOR_WIDTH * REACTOR_HEIGHT);
+	if (NULL == reactor)
+	{
+		fprintf(stderr, "ERROR: Out of memory\n");
+		return 1;
+	}
+
+	int x, y;
+	initReactor(reactor);
+	for (x = 0; x < REACTOR_WIDTH; x++)
+	{
+		for (y = 0; y < REACTOR_HEIGHT; y++)
+		{
+			setCell(reactor, x, y, CELL_URANIUM_QUAD);
+		}
+	}
+
+	printVector(reactor,REACTOR_WIDTH,REACTOR_HEIGHT);
+	code = calcReactor(reactor);
+
+	free(reactor);
+	return code;
 }
 
-void initField(int *FIELD, int width, int height)
+void initReactor(int *reactor)
 {
-    int c = 0;
-    int x, y;
-    
-    for( y=0; y<height; y++ )
-    {
-        for( x=0; x<width; x++ )
-        {
-            //c++;
-            FIELD[y*width+x] = c;
-        }
-    }
+	for (int y = 0; y < REACTOR_HEIGHT; y++)
+	{
+		for (int x = 0; x < REACTOR_WIDTH; x++)
+		{
+			*(reactor + (y * REACTOR_WIDTH + x)) = CELL_EMPTY;
+		}
+	}
 }
 
-void printField(int *FIELD, int width, int height)
+void printVector(int* reactor, int width, int height)
 {
-    int x, y;
-    
-    for( y=0; y<height; y++ )
-    {
-        for( x=0; x<width; x++ )
-        {
-            printf("%d\t", FIELD[y*width+x]);
-        }
-        printf("\n");
-    }
-    printf("\n");
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			printf("%d\t", *(reactor + y * width + x));
+		}
+		printf("\n");
+	}
 }
 
-int getEU(int *field, int width, int height)
+void setCell(int* reactor, int x, int y, int cell)
 {
-    int EU = 0;
-    int v;
-    int x,y;
-    int x_max = width-1;
-    int y_max = height-1;
-    
-    //int *ref = malloc(sizeof(int)*(width-2)*(height-2));
-    
-    for( x=1; x<x_max; x++ ) // without border
-    {
-        for( y=1; y<y_max; y++ )
-        {
-            switch( field[y*width+x] )
-            {
-            case CELL_URANIUM_SINGLE:
-                v = 5;
-                v += field[(y-1)*width+(x+0)] & MASK_CELL_URANIUM ? 5 : 0;
-                v += field[(y+1)*width+(x+0)] & MASK_CELL_URANIUM ? 5 : 0;
-                v += field[(y+0)*width+(x-1)] & MASK_CELL_URANIUM ? 5 : 0;
-                v += field[(y+0)*width+(x+1)] & MASK_CELL_URANIUM ? 5 : 0;
-                break;
-            case CELL_URANIUM_DOUBLE:
-                v = 20;
-                v += field[(y-1)*width+(x+0)] & MASK_CELL_URANIUM ? 10 : 0;
-                v += field[(y+1)*width+(x+0)] & MASK_CELL_URANIUM ? 10 : 0;
-                v += field[(y+0)*width+(x-1)] & MASK_CELL_URANIUM ? 10 : 0;
-                v += field[(y+0)*width+(x+1)] & MASK_CELL_URANIUM ? 10 : 0;
-                break;
-            case CELL_URANIUM_QUAD:
-                v = 60;
-                v += field[(y-1)*width+(x+0)] & MASK_CELL_URANIUM ? 20 : 0;
-                v += field[(y+1)*width+(x+0)] & MASK_CELL_URANIUM ? 20 : 0;
-                v += field[(y+0)*width+(x-1)] & MASK_CELL_URANIUM ? 20 : 0;
-                v += field[(y+0)*width+(x+1)] & MASK_CELL_URANIUM ? 20 : 0;
-                break;
-            default:
-                v = 0;
-                break;
-            }
-            
-            //ref[(y-1)*(width-2)+(x-1)] = v;
-            EU += v;
-        }
-    }
- 
-    //printf("\n---------------------------\n");
-    //printField(ref,width-2,height-2);
-    //free(ref);
-    
-    return EU;
+	*(reactor + y * REACTOR_WIDTH + x) = cell;
 }
 
-
-int getEU(int *field, int width, int height)
+int calcReactor(const int* reactor)
 {
-    int EU = 0;
-    int v;
-    int x,y;
-    int x_max = width-1;
-    int y_max = height-1;
-    
-    //int *ref = malloc(sizeof(int)*(width-2)*(height-2));
-    
-    for( x=1; x<x_max; x++ ) // without border
-    {
-        for( y=1; y<y_max; y++ )
-        {
-            switch( field[y*width+x] )
-            {
-            case CELL_URANIUM_SINGLE:
-                v = 5;
-                v += field[(y-1)*width+(x+0)] & MASK_CELL_URANIUM ? 5 : 0;
-                v += field[(y+1)*width+(x+0)] & MASK_CELL_URANIUM ? 5 : 0;
-                v += field[(y+0)*width+(x-1)] & MASK_CELL_URANIUM ? 5 : 0;
-                v += field[(y+0)*width+(x+1)] & MASK_CELL_URANIUM ? 5 : 0;
-                break;
-            case CELL_URANIUM_DOUBLE:
-                v = 20;
-                v += field[(y-1)*width+(x+0)] & MASK_CELL_URANIUM ? 10 : 0;
-                v += field[(y+1)*width+(x+0)] & MASK_CELL_URANIUM ? 10 : 0;
-                v += field[(y+0)*width+(x-1)] & MASK_CELL_URANIUM ? 10 : 0;
-                v += field[(y+0)*width+(x+1)] & MASK_CELL_URANIUM ? 10 : 0;
-                break;
-            case CELL_URANIUM_QUAD:
-                v = 60;
-                v += field[(y-1)*width+(x+0)] & MASK_CELL_URANIUM ? 20 : 0;
-                v += field[(y+1)*width+(x+0)] & MASK_CELL_URANIUM ? 20 : 0;
-                v += field[(y+0)*width+(x-1)] & MASK_CELL_URANIUM ? 20 : 0;
-                v += field[(y+0)*width+(x+1)] & MASK_CELL_URANIUM ? 20 : 0;
-                break;
-            default:
-                v = 0;
-                break;
-            }
-            
-            //ref[(y-1)*(width-2)+(x-1)] = v;
-            EU += v;
-        }
-    }
- 
-    //printf("\n---------------------------\n");
-    //printField(ref,width-2,height-2);
-    //free(ref);
-    
-    return EU;
-}
+	// init
 
-/*
-void setFieldEU(enum CellType *FIELD, enum CellType *FIELD_EU)
-{
-    int sum;
-    int x, y;
-    
-    for( y=0; y<FIELD_HEIGHT; y++ )
-    {
-        for( x=0; x<FIELD_WIDTH; x++ )
-        {
-            switch( FIELD[(y+1)*FIELD_WIDTH+(x+1)] )
-            {
-            case CELL_URANIUM_SINGLE:
-                sum = 5;
-                if( FIELD[(y+2)*FIELD_WIDTH+(x+1)] != CELL_EMPTY ) { sum += 5; }
-                if( FIELD[(y+0)*FIELD_WIDTH+(x+1)] != CELL_EMPTY ) { sum += 5; }
-                if( FIELD[(y+1)*FIELD_WIDTH+(x+2)] != CELL_EMPTY ) { sum += 5; }
-                if( FIELD[(y+1)*FIELD_WIDTH+(x+0)] != CELL_EMPTY ) { sum += 5; }
-                break;
-            case CELL_URANIUM_DOUBLE:
-                sum = 20;
-                if( FIELD[(y+2)*FIELD_WIDTH+(x+1)] != CELL_EMPTY ) { sum += 10; }
-                if( FIELD[(y+0)*FIELD_WIDTH+(x+1)] != CELL_EMPTY ) { sum += 10; }
-                if( FIELD[(y+1)*FIELD_WIDTH+(x+2)] != CELL_EMPTY ) { sum += 10; }
-                if( FIELD[(y+1)*FIELD_WIDTH+(x+0)] != CELL_EMPTY ) { sum += 10; }
-                break;
-            case CELL_URANIUM_QUAD:
-                sum = 60;
-                if( FIELD[(y+2)*FIELD_WIDTH+(x+1)] != CELL_EMPTY ) { sum += 20; }
-                if( FIELD[(y+0)*FIELD_WIDTH+(x+1)] != CELL_EMPTY ) { sum += 20; }
-                if( FIELD[(y+1)*FIELD_WIDTH+(x+2)] != CELL_EMPTY ) { sum += 20; }
-                if( FIELD[(y+1)*FIELD_WIDTH+(x+0)] != CELL_EMPTY ) { sum += 20; }
-                break;
-            default:
-                sum = 0;
-                break;
-            }
-            
-            FIELD_EU[y*FIELD_WIDTH+x] = sum;
-        }
-    }
+	int efficiency; // 효율
+	int heat; // 열 (HU/t)
+	int eu; // 발전량 (EU/t)
+	int eu_total = 0;
+	int heat_total = 0;
+
+	char buf[255];
+	int i, x, y;
+	int w = REACTOR_WIDTH + 2; // add border
+	int h = REACTOR_HEIGHT + 2; // add border
+
+	int* field = malloc(sizeof(int) * w * h);
+	if (NULL == field) { return 1; }
+	int* vectorEU = malloc(sizeof(int) * REACTOR_WIDTH * REACTOR_HEIGHT);
+	if (NULL == vectorEU) { free(field); return 1; }
+	int* vectorHEAT = malloc(sizeof(int) * REACTOR_WIDTH * REACTOR_HEIGHT);
+	if (NULL == vectorHEAT) { free(field); free(vectorEU); return 1; }
+
+	// init border
+
+	for (i = 0; i < w; i++)
+	{
+		*(field + i) = CELL_EMPTY;
+		*(field + (h - 1) * w + i) = CELL_EMPTY;
+	}
+
+	for (y = 1; y < h - 1; y++)
+	{
+		*(field + w * y) = CELL_EMPTY;
+		*(field + w * y + w - 1) = CELL_EMPTY;
+	}
+
+	for (y = 0; y < REACTOR_HEIGHT; y++)
+	{
+		for (x = 0; x < REACTOR_WIDTH; x++)
+		{
+			*(field + (y + 1) * w + x + 1) = reactor[y * REACTOR_WIDTH + x];
+		}
+	}
+
+	printf("------------------------------------------\n");
+	//printVector(field, w, h);
+
+	// calc
+
+	for (y = 1; y <=REACTOR_HEIGHT; y++)
+	{
+		for (x = 1; x <=REACTOR_WIDTH; x++)
+		{
+			/// efficiency
+
+			efficiency = 0;
+
+			switch (*(field + y * w + x))
+			{
+			case CELL_URANIUM_QUAD:
+				++efficiency;
+			case CELL_URANIUM_DOUBLE:
+				++efficiency;
+			case CELL_URANIUM_SINGLE:
+				++efficiency;
+			}
+
+			if (efficiency != 0)
+			{
+				switch (*(field + (y + 1) * w + (x + 0)))
+				{
+				case CELL_URANIUM_QUAD:
+				case CELL_URANIUM_DOUBLE:
+				case CELL_URANIUM_SINGLE:
+					++efficiency;
+				}
+				switch (*(field + (y - 1) * w + (x + 0)))
+				{
+				case CELL_URANIUM_QUAD:
+				case CELL_URANIUM_DOUBLE:
+				case CELL_URANIUM_SINGLE:
+					++efficiency;
+				}
+				switch (*(field + (y + 0) * w + (x + 1)))
+				{
+				case CELL_URANIUM_QUAD:
+				case CELL_URANIUM_DOUBLE:
+				case CELL_URANIUM_SINGLE:
+					++efficiency;
+				}
+				switch (*(field + (y + 0) * w + (x - 1)))
+				{
+				case CELL_URANIUM_QUAD:
+				case CELL_URANIUM_DOUBLE:
+				case CELL_URANIUM_SINGLE:
+					++efficiency;
+				}
+			}
+
+			/// i = cell count
+
+			switch (*(field + y * w + x))
+			{
+			case CELL_URANIUM_SINGLE:
+				i = 1;
+				break;
+			case CELL_URANIUM_DOUBLE:
+				i = 2;
+				break;
+			case CELL_URANIUM_QUAD:
+				i = 4;
+				break;
+			default:
+				i = 0;
+				break;
+			}
+
+			/// eu
+
+			eu = 5 * efficiency * i;
+
+			/// heat
+			
+			heat = 2 * efficiency * (efficiency + 1) * i;
+
+			/// output
+
+			eu_total += eu;
+			heat_total += heat;
+
+			//printf("%d\t", *(field + y*w+x));
+			//printf("%10d ", efficiency);
+			//printf("%10d ", i);
+			sprintf_s(&buf,sizeof(buf)/sizeof(char),"[%3d %3d]",eu,heat);
+			printf("%10s ",buf);
+			
+		}
+		printf("\n");
+	}
+	printf("\n");
+
+	free(field);
+	free(vectorEU);
+	free(vectorHEAT);
+
+	return 0;
 }
-*/
